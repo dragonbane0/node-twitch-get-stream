@@ -14,7 +14,7 @@ var titleCase = function(str) {
 // Twitch functions
 var getAccessToken = function(channel) {
     // Get access token
-    return axios.get('https://api.twitch.tv/api/channels/' + channel + '/access_token', {
+    return axios.get('https://api.twitch.tv/api/channels/' + channel + '/access_token?platform=_', {
         headers: {
             'Client-ID': clientId
         }
