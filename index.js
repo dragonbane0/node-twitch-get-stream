@@ -16,7 +16,8 @@ var getAccessToken = function(channel) {
     // Get access token
     return axios.get('https://api.twitch.tv/api/channels/' + channel + '/access_token?platform=_', {
         headers: {
-            'Client-ID': clientId
+            'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko', //clientId,  //twitch client id
+            'Accept': 'application/vnd.twitchtv.v5+json; charset=UTF-8'
         }
     }).then(function(res) {
         return res.data;
@@ -65,13 +66,17 @@ var getPlaylistParsed = function(channel) {
     return getPlaylistOnly(channel)
         .then(function(data) {
             // basically parse then _.compact (remove falsy values)
-            return M3U.parse(data).filter(function(d) { return d; });
+            return M3U.parse(data).filter(function (d) { return d; });
         });
 }
 
 var getStreamUrls = function(channel) { // This returns the one with a custom fully parsed object
-    return getPlaylistParsed(channel)
-        .then(function(playlist) {
+    return getPlaylistOnly(channel)
+        .then(function (playlist) {
+
+            let rawData = playlist;
+            playlist = M3U.parse(playlist).filter(function (d) { return d; });
+
             if (playlist.length < 1)
                 throw new Error('There were no results, maybe the channel is offline?');
 
@@ -99,7 +104,9 @@ var getStreamUrls = function(channel) { // This returns the one with a custom fu
                 });
             }
 
-            return streamLinks;
+            return {
+                masterPlaylist: rawData, streamLinks: streamLinks
+            };
         });
 }
 

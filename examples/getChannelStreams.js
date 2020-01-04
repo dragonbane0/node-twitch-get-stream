@@ -1,11 +1,11 @@
-var clid = require('./clid.json').clid; // place in clid.json as a property 'clid' - can be obtained from your twitch.tv settings -> connections -> register developer app
-var twitchStreams = require('../')(clid);
 
-twitchStreams.get('Monstercat')
+var twitchStreams = require('../')("");
+
+twitchStreams.get('speedgaming')
     .then(function(streams) {
-        console.log('Got stream data.');
+        console.log('Got stream data.', streams);
 
-        for (var stream of streams)
+        for (var stream of streams.streamLinks)
             console.log(stream.quality + ' (' + stream.resolution + '): ' + stream.url);
     })
     .catch(function(error) {
