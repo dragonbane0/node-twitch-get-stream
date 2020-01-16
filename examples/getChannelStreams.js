@@ -1,7 +1,7 @@
 
 var twitchStreams = require('../')("");
 
-twitchStreams.get('speedgaming')
+twitchStreams.get('ennopp112')
     .then(function(streams) {
         console.log('Got stream data.', streams);
 

@@ -1,30 +1,32 @@
-var axios = require('axios');
+var request = require('request-promise');
 var M3U = require('playlist-parser').M3U;
 var qs = require('querystring');
+var perf = require('perf_hooks');
 
 var clientId;
 
 // Thanks michaelowens, :)
 // Simple titlecase thing, capitalize first letter
-var titleCase = function(str) {
-    return str.split(' ').map(function(word) { return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(); }).join(' ');
-}
+var titleCase = function (str) {
+    return str.split(' ').map(function (word) { return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(); }).join(' ');
+};
 
 
 // Twitch functions
-var getAccessToken = function(channel) {
+var getAccessToken = function (channel) {
     // Get access token
-    return axios.get('https://api.twitch.tv/api/channels/' + channel + '/access_token?platform=_', {
+    return request.get('https://api.twitch.tv/api/channels/' + channel + '/access_token?platform=_', {
+        json: true,
         headers: {
             'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko', //clientId,  //twitch client id
             'Accept': 'application/vnd.twitchtv.v5+json; charset=UTF-8'
         }
-    }).then(function(res) {
-        return res.data;
+    }).then(function (res) {
+        return res;
     });
-}
+};
 
-var getPlaylist = function(channel, accessToken) {
+var getPlaylist = function (channel, accessToken) {
     // Get the playlist with given access token data (parsed /access_token response)
     var query = {
         player: 'twitchweb',
@@ -36,43 +38,50 @@ var getPlaylist = function(channel, accessToken) {
         p: Math.floor(Math.random() * 99999) + 1
     };
 
-    return axios.get('https://usher.ttvnw.net/api/channel/hls/' + channel + '.m3u8?' + qs.stringify(query), {
+    return request.get('https://usher.ttvnw.net/api/channel/hls/' + channel + '.m3u8?' + qs.stringify(query), {
         headers: {
             'Client-ID': clientId
-        }
-    }).then(function(res) {
-        return res.data;
+        },
+        time: true,
+        resolveWithFullResponse: true
+    }).then(function (res) {
+        return res;
     });
-}
+};
 
 // Exposed functions
 // Just get the playlist, return the string nothing else
-var getPlaylistOnly = function(channel) {
+var getPlaylistOnly = function (channel) {
     if (!channel)
         return Promise.reject(new Error('No channel defined.'));
 
-    var channel = channel.toLowerCase(); // Twitch API only takes lowercase
+    channel = channel.toLowerCase(); // Twitch API only takes lowercase
     return getAccessToken(channel)
-        .then(function(token) {
+        .then(function (token) {
             return getPlaylist(channel, token);
         });
-}
+};
 
 // Above get playlist, but then parses it and gives the object
-var getPlaylistParsed = function(channel) {
+var getPlaylistParsed = function (channel) {
     if (!channel)
         return Promise.reject(new Error('No channel defined.'));
-    
-    return getPlaylistOnly(channel)
-        .then(function(data) {
-            // basically parse then _.compact (remove falsy values)
-            return M3U.parse(data).filter(function (d) { return d; });
-        });
-}
 
-var getStreamUrls = function(channel) { // This returns the one with a custom fully parsed object
+    return getPlaylistOnly(channel)
+        .then(function (data) {
+            // basically parse then _.compact (remove falsy values)
+            return M3U.parse(data.body).filter(function (d) { return d; });
+        });
+};
+
+var getStreamUrls = function (channel) { // This returns the one with a custom fully parsed object
     return getPlaylistOnly(channel)
         .then(function (playlist) {
+
+            let processingStartTS = perf.performance.now();
+            let downloadTime = playlist.timingPhases.download;
+
+            playlist = playlist.body;
 
             let rawData = playlist;
             playlist = M3U.parse(playlist).filter(function (d) { return d; });
@@ -96,7 +105,7 @@ var getStreamUrls = function(channel) { // This returns the one with a custom fu
                 // Resolution
                 var resMatch = playlist[i].title.match(/RESOLUTION=(.*?),/);
                 var res = resMatch ? resMatch[1] : null // Audio only does not have a res so we need this check
-                
+
                 streamLinks.push({
                     quality: titleCase(name), // Title case the quality
                     resolution: res,
@@ -104,11 +113,13 @@ var getStreamUrls = function(channel) { // This returns the one with a custom fu
                 });
             }
 
+            let processingTime = perf.performance.now() - processingStartTS;
+
             return {
-                masterPlaylist: rawData, streamLinks: streamLinks
+                masterPlaylist: rawData, streamLinks: streamLinks, timeSincePlaylistCreation: downloadTime + processingTime
             };
         });
-}
+};
 
 module.exports = 
     function(clid) {

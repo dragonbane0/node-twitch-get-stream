@@ -14,7 +14,8 @@
   },
   "homepage": "https://github.com/nicholastay/node-twitch-get-stream#readme",
   "dependencies": {
-    "axios": "^0.18.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5",
     "playlist-parser": "0.0.12"
   },
   "keywords": [
