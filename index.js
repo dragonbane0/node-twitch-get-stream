@@ -34,6 +34,8 @@ var getPlaylist = function (channel, accessToken) {
         sig: accessToken.sig,
         allow_audio_only: 'true',
         allow_source: 'true',
+        fast_bread: 'true',
+        playlist_include_framerate: 'true',
         type: 'any',
         p: Math.floor(Math.random() * 99999) + 1
     };
