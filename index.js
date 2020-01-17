@@ -106,11 +106,21 @@ var getStreamUrls = function (channel) { // This returns the one with a custom f
 
                 // Resolution
                 var resMatch = playlist[i].title.match(/RESOLUTION=(.*?),/);
-                var res = resMatch ? resMatch[1] : null // Audio only does not have a res so we need this check
+                var res = resMatch ? resMatch[1] : null; // Audio only does not have a res so we need this check
+
+                // Framerate
+                var fpsMatch = playlist[i].title.match(/FRAME-RATE=(.*?)$/);
+                var fps = fpsMatch ? Number.parseFloat(fpsMatch[1]) : null; // Audio only does not have a fps so we need this check
+
+                // Bandwith/Bitrate (in bytes)
+                var bandwithMatch = playlist[i].title.match(/BANDWIDTH=(.*?),/);
+                var bandwith = bandwithMatch ? Number.parseInt(bandwithMatch[1]) : null;
 
                 streamLinks.push({
                     quality: titleCase(name), // Title case the quality
                     resolution: res,
+                    framerate: fps,
+                    bitrate: bandwith,
                     url: playlist[i].file
                 });
             }
