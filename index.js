@@ -15,10 +15,10 @@ var titleCase = function (str) {
 // Twitch functions
 var getAccessToken = function (channel) {
     // Get access token
-    return request.get('https://api.twitch.tv/api/channels/' + channel + '/access_token?platform=_', {
+    return request.get('https://api.twitch.tv/api/channels/' + channel + '/access_token', { //No params is the new swag now, old one was: ?platform=_
         json: true,
         headers: {
-            'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko', //clientId,  //twitch client id
+            'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko', //clientId,  //Now uses the twitch client id
             'Accept': 'application/vnd.twitchtv.v5+json; charset=UTF-8'
         }
     }).then(function (res) {
